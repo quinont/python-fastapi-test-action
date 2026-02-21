@@ -1,12 +1,11 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from typing import Optional
 from pydantic import BaseModel
 
 Base = declarative_base()
 
 
-class Book(Base):
+class Book(Base):  # type: ignore[valid-type,misc]
     __tablename__ = "books"
 
     id = Column(Integer, primary_key=True, index=True)

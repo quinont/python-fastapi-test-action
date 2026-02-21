@@ -17,7 +17,7 @@ lint:
 	$(VENV)/bin/flake8 server --max-line-length 90
 
 mypy:
-	$(VENV)/bin/mypy server
+	$(VENV)/bin/mypy . --explicit-package-bases --namespace-packages
 
 format:
 	$(PYTHON) -m black .

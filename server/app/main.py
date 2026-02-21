@@ -8,7 +8,7 @@ from server.app.connect import db_session, engine
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)  # type: ignore[attr-defined]
 
 
 def get_db():
