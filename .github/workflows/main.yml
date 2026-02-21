@@ -45,7 +45,7 @@ jobs:
       - run: pip install --upgrade pip  
       - run: pip install -r server/requirements.txt 
       - run: pip install -r requirements-dev.txt
-      - run: echo pytest tests/unit/
+      - run: make test-unit PYTHON=python
 
   integration-tests:
     name: Integration Tests (Postgres)
@@ -74,9 +74,29 @@ jobs:
       - run: pip install --upgrade pip  
       - run: pip install -r server/requirements.txt
       - run: pip install -r requirements-dev.txt
-      - env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-        run: echo pytest tests/integration/
+
+      - name: Install postgresql-client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run DB Init Script
+        env:
+          PGPASSWORD: test_password
+          POSTGRES_MASTER: test_user
+          WORKSHOP_POSTGRES_USER: bookdbadmin
+          WORKSHOP_POSTGRES_PASSWORD: dbpassword
+          WORKSHOP_POSTGRES_DB: bookstore
+          PGHOST: localhost
+          PGPORT: 5432
+        run: |
+          chmod +x server/db/init.sh
+          ./server/db/init.sh
+
+      - name: Run Integration Tests
+        env:
+          DOCKER_DATABASE_URL: postgresql://bookdbadmin:dbpassword@localhost:5432/bookstore
+        run: make test-integration PYTHON=python
 
   build-push-deploy:
     name: Build, Push & Deploy to K8s
