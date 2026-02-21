@@ -1,0 +1,108 @@
+name: Python CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  PYTHON_VERSION: "3.11"
+  GCP_PROJECT_ID: "tu-proyecto-gcp"
+  GAR_LOCATION: "us-central1"
+  REPOSITORY_NAME: github.event.repository.name
+  GKE_CLUSTER: "tu-cluster-gke"
+  GKE_ZONE: "us-central1-c"
+
+jobs:
+  code-quality:
+    name: Format, Lint & SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install tools
+        run: pip install --upgrade pip black mypy bandit
+      - run: black --check .
+      - run: mypy . --explicit-package-bases --namespace-packages
+      - run: bandit -r . -ll -ii
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r server/requirements.txt requirements-dev.txt
+      - run: echo pytest tests/unit/
+
+  integration-tests:
+    name: Integration Tests (Postgres)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r server/requirements.txt requirements-dev.txt
+      - env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        run: echo pytest tests/integration/
+
+  build-push-deploy:
+    name: Build, Push & Deploy to K8s
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    
+    # NUEVO: Selección dinámica de entorno basada en la rama
+    environment: 
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+      
+    if: |
+      always() && 
+      needs.unit-tests.result == 'success' && 
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate Dynamic Image Tag
+        id: tag_gen
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "IMAGE_TAG=${SHORT_SHA}" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=${SHORT_SHA}-rc" >> $GITHUB_ENV
+          fi
+
+      - name: Patch Kubernetes Deployment
+        run: |
+          FULL_IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
+          echo kubectl set image deployment/${{ env.REPOSITORY_NAME }} ${{ env.REPOSITORY_NAME }}=${FULL_IMAGE} -n default
+
+      - name: Validate Deployment Rollout
+        run: |
+          echo kubectl rollout status deployment/${{ env.REPOSITORY_NAME }} -n default --timeout=120s
