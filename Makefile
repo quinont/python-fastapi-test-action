@@ -1,6 +1,6 @@
-VENV = venv
-PYTHON = $(VENV)/bin/python
-PIP = $(VENV)/bin/pip
+VENV ?= venv
+PYTHON ?= $(VENV)/bin/python
+PIP ?= $(VENV)/bin/pip
 
 .PHONY: install lint test format run clean
 
@@ -25,9 +25,13 @@ format:
 bandit:
 	$(VENV)/bin/bandit -r server -ll -ii
 
-test:
-	echo estamos trabajando en esto
-	#$(PYTHON) -m pytest -v tests/ --cov --junitxml=report.xml --cov-report term --cov-report xml:coverage.xml
+test: test-unit
+
+test-unit:
+	PYTHONPATH=. $(PYTHON) -m pytest tests/unit/
+
+test-integration:
+	PYTHONPATH=. $(PYTHON) -m pytest tests/integration/
 
 run:
 	PYTHONPATH=. $(PYTHON) server/main.py
