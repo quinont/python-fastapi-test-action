@@ -22,6 +22,9 @@ mypy:
 format:
 	$(PYTHON) -m black .
 
+bandit:
+	$(VENV)/bin/bandit -r server -ll -ii
+
 test:
 	echo estamos trabajando en esto
 	#$(PYTHON) -m pytest -v tests/ --cov --junitxml=report.xml --cov-report term --cov-report xml:coverage.xml

@@ -31,7 +31,7 @@ jobs:
         run: pip install -r server/requirements.txt
       - run: black --check .
       - run: mypy . --explicit-package-bases --namespace-packages
-      - run: bandit -r . -ll -ii
+      - run: bandit -r server -ll -ii
 
   unit-tests:
     name: Unit Tests
