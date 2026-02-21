@@ -24,7 +24,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install tools
-        run: pip install --upgrade pip black mypy bandit
+        run: pip install --upgrade pip  
+      - name: Install dev tools
+        run: pip install -r requirements-dev.txt
+      - name: Install need library
+        run: pip install -r server/requirements.txt
       - run: black --check .
       - run: mypy . --explicit-package-bases --namespace-packages
       - run: bandit -r . -ll -ii
