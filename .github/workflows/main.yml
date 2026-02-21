@@ -42,7 +42,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install -r server/requirements.txt requirements-dev.txt
+        run: pip install --upgrade pip  
+      - run: pip install -r server/requirements.txt 
+      - run: pip install -r requirements-dev.txt
       - run: echo pytest tests/unit/
 
   integration-tests:
@@ -69,7 +71,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install -r server/requirements.txt requirements-dev.txt
+      - run: pip install -r server/requirements.txt
+      - run: pip install -r requirements-dev.txt
       - env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: echo pytest tests/integration/
