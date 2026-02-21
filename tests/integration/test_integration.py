@@ -16,12 +16,17 @@ if "DOCKER_DATABASE_URL" not in os.environ:
 try:
     from server.app.main import app
 except SystemExit:
-    pytest.skip("Database not configured, skipping integration tests", allow_module_level=True)
+    pytest.skip(
+        "Database not configured, skipping integration tests", allow_module_level=True
+    )
 except ImportError:
-     # This might happen if server.app.connect fails to connect and raises exception instead of sys.exit
-     pytest.skip("Could not import app, likely DB connection failed", allow_module_level=True)
+    # This might happen if server.app.connect fails to connect and raises exception instead of sys.exit
+    pytest.skip(
+        "Could not import app, likely DB connection failed", allow_module_level=True
+    )
 
 client = TestClient(app)
+
 
 def test_integration_workflow():
     # 1. List books - should be empty initially or have content
@@ -33,7 +38,7 @@ def test_integration_workflow():
     book_data = {
         "title": "Integration Test Book",
         "author": "Integration Author",
-        "description": "Created during integration test"
+        "description": "Created during integration test",
     }
     # Follow redirects to get the list page back
     response = client.post("/books", data=book_data, follow_redirects=True)
