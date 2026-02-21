@@ -89,6 +89,7 @@ jobs:
           WORKSHOP_POSTGRES_DB: bookstore
           PGHOST: localhost
           PGPORT: 5432
+          PGDATABASE: test_db
         run: |
           chmod +x server/db/init.sh
           ./server/db/init.sh
