@@ -65,7 +65,7 @@ jobs:
         run: |
           echo docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
 
-      - name: Desplegar en Cloud Run
+      - name: deploy-to-cloud-run
         run: |
           echo aqui se esta desplegando al cloud run ${{ vars.SERVICE_NAME }}
 
@@ -73,7 +73,7 @@ jobs:
 #        run: |
 #          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
 #
-#      - name: Desplegar en Cloud Run
+#      - name: deploy-to-cloud-run
 #        uses: google-github-actions/deploy-cloudrun@v3
 #        with:
 #          service: ${{ vars.SERVICE_NAME }}
@@ -81,3 +81,9 @@ jobs:
 #          image: "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
 #          secrets: |-
 #              DOCKER_DATABASE_URL=${{ vars.secret_database_url }}:latest
+#
+#      - name: 'smoke test del despliegue'
+#        run: |
+#          echo Probando la url del despliegue:
+#          curl ${{ steps.deploy-to-cloud-run.outputs.url }}
+#          echo "Fin de la prueba"
