@@ -10,12 +10,13 @@ permissions:
   contents: write
 
 env:
-  PYTHON_VERSION: "3.11"
   GCP_PROJECT_ID: "tu-proyecto-gcp"
+  GCP_PROJECT_ID_NUMBER: "1234567"
+  GCP_WORKLOAD_IDENTITY_FEDERATION_POOL_ID: "mi-pool"
+  GCP_WORKLOAD_IDENTITY_FEDERATION_PROVIDER_ID: "mi-provider"
   GAR_LOCATION: "us-central1"
   REPOSITORY_NAME: ${{ github.event.repository.name }}
-  GKE_CLUSTER: "tu-cluster-gke"
-  GKE_ZONE: "us-central1-c"
+  # SERVICE_NAME: ${{ github.event.repository.name }} <- Esto debe venir de las variables del environment
 
 jobs:
   preparar_codigo:
@@ -38,13 +39,45 @@ jobs:
         id: tag_gen
         run: |
           echo "IMAGE_TAG=${{ needs.preparar_codigo.outputs.image_tag }}" >> $GITHUB_ENV
+          echo "Nombre del servicio a deployar: ${{ vars.SERVICE_NAME }}"
 
-      - name: Patch Kubernetes Deployment
+# Estas lineas estan comentadas porque no pude crear el proyecto de gcp, pero la idea es mas o menos hacer esto:
+#
+#      - name: Autenticación en Google Cloud
+#        uses: google-github-actions/auth@v3
+#        with:
+#          project_id: "${{ env.GCP_PROJECT_ID }}"
+#          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_ID_NUMBER }}/locations/global/workloadIdentityPools/${{ env.GCP_WORKLOAD_IDENTITY_FEDERATION_POOL_ID }}/providers/${{ env.GCP_WORKLOAD_IDENTITY_FEDERATION_PROVIDER_ID }}'
+#
+      - name: 'Instalando Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v3'
+        with:
+          version: 'latest'
+
+#      - name: Configurar Docker para Artifact Registry
+#        run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
+
+      - name: Docker Build
         run: |
-          FULL_IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
-          echo kubectl set image deployment/${{ env.REPOSITORY_NAME }} ${{ env.REPOSITORY_NAME }}=${FULL_IMAGE} -n default
+          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}" .
 
-      - name: Validate Deployment Rollout
+      - name: Docker Push
         run: |
-          echo kubectl rollout status deployment/${{ env.REPOSITORY_NAME }} -n default --timeout=120s
+          echo docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
 
+      - name: Desplegar en Cloud Run
+        run: |
+          echo aqui se esta desplegando al cloud run ${{ vars.SERVICE_NAME }}
+
+#      - name: Docker Push
+#        run: |
+#          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
+#
+#      - name: Desplegar en Cloud Run
+#        uses: google-github-actions/deploy-cloudrun@v3
+#        with:
+#          service: ${{ vars.SERVICE_NAME }}
+#          region: ${{ env.GAR_LOCATION }}
+#          image: "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
+#          secrets: |-
+#              DOCKER_DATABASE_URL=${{ vars.secret_database_url }}:latest
