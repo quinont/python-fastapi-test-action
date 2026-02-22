@@ -11,6 +11,10 @@ env:
   REPOSITORY_NAME: ${{ github.event.repository.name }}
 
 jobs:
+  preparar_codigo:
+    uses: ./.github/workflows/common-lint-version.yml
+    secrets: inherit
+
   code-quality:
     name: Format, Lint & SAST
     runs-on: ubuntu-latest

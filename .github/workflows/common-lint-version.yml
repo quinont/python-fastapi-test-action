@@ -1,0 +1,51 @@
+name: "Common: Lint & Version"
+
+on:
+  workflow_call:
+    outputs:
+      image_tag:
+        description: "El tag calculado para la imagen"
+        value: ${{ jobs.versioning.outputs.tag }}
+
+jobs:
+  lint_commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+      - uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: commitlint.config.js
+
+  versioning:
+    needs: lint_commits
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.set_final_tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Calcular Versionamiento Semántico
+        id: semver
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+          dry_run: ${{ github.ref_name != 'main' }}
+
+      - name: Determinar Tag
+        id: set_final_tag
+        run: |
+          VERSION=${{ steps.semver.outputs.new_version }}
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "tag=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$VERSION-rc" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Build y Push (Simulado)
+        run: echo "Construyendo imagen con tag $VERSION..."

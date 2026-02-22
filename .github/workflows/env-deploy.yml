@@ -15,8 +15,13 @@ env:
   GKE_ZONE: "us-central1-c"
 
 jobs:
+  preparar_codigo:
+    uses: ./.github/workflows/common-lint-version.yml
+    secrets: inherit
+
   build-push-deploy:
     name: Build, Push & Deploy to K8s
+    needs: preparar_codigo
     runs-on: ubuntu-latest
     
     environment: 
@@ -29,12 +34,7 @@ jobs:
       - name: Generate Dynamic Image Tag
         id: tag_gen
         run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "IMAGE_TAG=${SHORT_SHA}" >> $GITHUB_ENV
-          else
-            echo "IMAGE_TAG=${SHORT_SHA}-rc" >> $GITHUB_ENV
-          fi
+          echo "IMAGE_TAG=${{ needs.preparar_codigo.outputs.image_tag }}" >> $GITHUB_ENV
 
       - name: Patch Kubernetes Deployment
         run: |
