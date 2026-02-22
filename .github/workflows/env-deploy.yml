@@ -49,11 +49,11 @@ jobs:
 #          project_id: "${{ env.GCP_PROJECT_ID }}"
 #          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_ID_NUMBER }}/locations/global/workloadIdentityPools/${{ env.GCP_WORKLOAD_IDENTITY_FEDERATION_POOL_ID }}/providers/${{ env.GCP_WORKLOAD_IDENTITY_FEDERATION_PROVIDER_ID }}'
 #
-#      - name: 'Instalando Cloud SDK'
-#        uses: 'google-github-actions/setup-gcloud@v3'
-#        with:
-#          version: 'latest'
-#
+      - name: 'Instalando Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v3'
+        with:
+          version: 'latest'
+
 #      - name: Configurar Docker para Artifact Registry
 #        run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
 
