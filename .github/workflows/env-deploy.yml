@@ -1,6 +1,7 @@
-name: Deploy to production
+name: Deploy to environment
 
 on:
+  workflow_dispatch:
   push:
     branches:
     - "main"
@@ -9,7 +10,7 @@ env:
   PYTHON_VERSION: "3.11"
   GCP_PROJECT_ID: "tu-proyecto-gcp"
   GAR_LOCATION: "us-central1"
-  REPOSITORY_NAME: github.event.repository.name
+  REPOSITORY_NAME: ${{ github.event.repository.name }}
   GKE_CLUSTER: "tu-cluster-gke"
   GKE_ZONE: "us-central1-c"
 
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     
     environment: 
-      name: "production"
+      name: ${{ github.ref_name == 'main' && 'production' || 'develop' }}
     
     steps:
       - name: Checkout repository
