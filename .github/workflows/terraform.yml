@@ -1,0 +1,85 @@
+name: 'Terraform CI/CD'
+
+on:
+  push:
+    branches:
+      - main
+      - fix/
+      - feat/
+    paths:
+      - 'infra/**'
+
+jobs:
+  validate:
+    name: 'Terraform Validate'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: 
+          - infra/envs/common
+          - infra/envs/dev
+          - infra/envs/prod
+
+    steps:
+    - name: 'Checkout Repository'
+      uses: actions/checkout@v4
+
+    - name: 'Setup Terraform'
+      uses: hashicorp/setup-terraform@v3
+
+    - name: 'Terraform Init'
+      working-directory: ${{ matrix.dir }}
+      run: terraform init -backend=false
+    
+    - name: 'Terraform FMT'
+      working-directory: ${{ matrix.dir }}
+      run: terraform fmt -recursive .
+
+    - name: 'Terraform Validate'
+      working-directory: ${{ matrix.dir }}
+      run: terraform validate -no-color
+
+# TODO: 
+# - Agregar el plan cuando se hace un PR, revisar que se puede hacer con las credenciales de GCP.
+
+  apply:
+    name: 'Terraform Apply'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    strategy:
+      max-parallel: 1
+      matrix:
+        dir: 
+          - infra/envs/common
+          - infra/envs/dev
+          - infra/envs/prod
+
+    steps:
+    - name: 'Checkout Repository'
+      uses: actions/checkout@v4
+
+    - name: 'Aplicando terraform apply'
+      run: |
+        echo 'Aplicando terraform apply para ${{ matrix.dir }}'
+        sleep 10
+        echo 'Termino de aplicar terraform apply para ${{ matrix.dir }}'
+
+# Descomentar esto cuando se tenga las credenciales correctas.
+#    - name: 'Authenticate to GCP'
+#      uses: google-github-actions/auth@v2
+#      with:
+#        credentials_json: ${{ secrets.GCP_SA_KEY }}
+#
+#    - name: 'Setup Terraform'
+#      uses: hashicorp/setup-terraform@v3
+#
+#    - name: 'Terraform Init'
+#      working-directory: ${{ matrix.dir }}
+#      run: terraform init
+#
+#    - name: 'Terraform Apply'
+#      working-directory: ${{ matrix.dir }}
+#      run: terraform apply -auto-approve
