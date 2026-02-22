@@ -65,3 +65,14 @@ La integración y validación continua (CI/CD) se orquesta usando tres flujos pr
 - [`common-lint-version.yml`](../.github/workflows/common-lint-version.yml): Válida que los mensajes de commit sigan las reglas de semántica descritas. Está centralizado para ser reutilizado.
 - [`pipeline.yml`](../.github/workflows/pipeline.yml): Encargado del control de calidad. Ejecuta las pruebas unitarias, Linting de código, SAST y validaciones de tipos (Mypy). Estos test no vuelven a correr en la rama `main` para consumir menos recursos y tiempo.
 - [`pr-to-main.yml`](../.github/workflows/pr-to-main.yml): Pipeline exclusivo y obligatorio para todos los PRs que apuntan a `main`. Su objetivo es ejecutar los **tests de integración**. Al levantar contenedores y bases de datos reales (PostgreSQL), asegura de forma rigurosa la estabilidad general de la aplicación antes de cualquier cambio en producción.
+
+
+## Consideraciones
+
+¿Y qué pasa con Docker? Si revisaste bien, notarás que en todo este flujo básico de Integración Continua (CI) omitimos por completo el armado de las imágenes de contenedores. 
+
+Esto no es un descuido. Construir y subir imágenes con cada commit puede alargar los tiempos y dependerá en gran medida de cómo el equipo de desarrollo decida hacer en sus ambientes (por ejemplo, entregar cada cambio a `dev` automáticamente vs. despliegues bajo demanda).
+
+Para mantener la flexibilidad y hacer esta parte mucho más _ad-hoc_, decidí separar todo lo relacionado con el despliegue físico y el manejo de imágenes a un flujo dedicado: [`env-deploy.yml`](../.github/workflows/env-deploy.yml).
+
+¿Cómo encaja exactamente esta pieza para completar el rompecabezas? La respuesta te espera en el siguiente documento...
