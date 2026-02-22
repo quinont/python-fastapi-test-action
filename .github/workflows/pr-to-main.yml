@@ -1,0 +1,61 @@
+name: Pull requests to Main
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  PYTHON_VERSION: "3.11"
+  REPOSITORY_NAME: github.event.repository.name
+
+jobs:
+  integration-tests:
+    name: Integration Tests (Postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install --upgrade pip  
+      - run: pip install -r server/requirements.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Install postgresql-client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run DB Init Script
+        env:
+          PGPASSWORD: test_password
+          POSTGRES_MASTER: test_user
+          WORKSHOP_POSTGRES_USER: bookdbadmin
+          WORKSHOP_POSTGRES_PASSWORD: dbpassword
+          WORKSHOP_POSTGRES_DB: bookstore
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: test_db
+        run: |
+          chmod +x server/db/init.sh
+          ./server/db/init.sh
+
+      - name: Run Integration Tests
+        env:
+          DOCKER_DATABASE_URL: postgresql://bookdbadmin:dbpassword@localhost:5432/bookstore
+        run: make test-integration PYTHON=python
+
