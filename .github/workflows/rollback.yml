@@ -1,0 +1,50 @@
+name: Rollback Cloud Run Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag de la imagen a la que deseas volver (ej. 1.0.0), revisar tag de git'
+        required: true
+
+env:
+  GCP_PROJECT_ID: "tu-proyecto-gcp"
+  GCP_PROJECT_ID_NUMBER: "1234567"
+  GCP_WORKLOAD_IDENTITY_FEDERATION_POOL_ID: "mi-pool"
+  GCP_WORKLOAD_IDENTITY_FEDERATION_PROVIDER_ID: "mi-provider"
+  GAR_LOCATION: "us-central1"
+  REPOSITORY_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+# Estas lineas estan comentadas porque no pude crear el proyecto de gcp, pero la idea es mas o menos hacer esto:
+#
+#      - name: Autenticación en Google Cloud
+#        uses: google-github-actions/auth@v3
+#        with:
+#          project_id: "${{ env.GCP_PROJECT_ID }}"
+#          workload_identity_provider: 'projects/${{ env.GCP_PROJECT_ID_NUMBER }}/locations/global/workloadIdentityPools/${{ env.GCP_WORKLOAD_IDENTITY_FEDERATION_POOL_ID }}/providers/${{ env.GCP_WORKLOAD_IDENTITY_FEDERATION_PROVIDER_ID }}'
+#
+      - name: 'Instalando Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v3'
+        with:
+          version: 'latest'
+
+      - name: Desplegar en Cloud Run
+        run: |
+          echo aqui se esta haciendo rollback a la version ${{ github.event.inputs.image_tag }} en el cloud run ${{ vars.SERVICE_NAME }}
+
+#      - name: Desplegar en Cloud Run
+#        uses: google-github-actions/deploy-cloudrun@v3
+#        with:
+#          service: ${{ vars.SERVICE_NAME }}
+#          region: ${{ env.GAR_LOCATION }}
+#          image: "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ github.event.inputs.image_tag }}"
+#          secrets: |-
+#              DOCKER_DATABASE_URL=${{ vars.secret_database_url }}:latest
