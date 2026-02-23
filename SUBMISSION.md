@@ -4,11 +4,16 @@
 - https://github.com/quinont/python-fastapi-test-action
 
 **Links de runs de CI (PR y main):**
-- **PR:** TBD
-- **Main:** TBD
+- **PR:** https://github.com/quinont/python-fastapi-test-action/pull/7
+  - Pipelines:
+     - pipeline de ci https://github.com/quinont/python-fastapi-test-action/actions/runs/22289054667
+     - pipeline de despliegue en dev https://github.com/quinont/python-fastapi-test-action/actions/runs/22289078670
+     - pipeline durante el PR (test de integracion) https://github.com/quinont/python-fastapi-test-action/actions/runs/22289110470
+- **Main:** 
+  - pipeline de despliegue y generacion de tag: https://github.com/quinont/python-fastapi-test-action/actions/runs/22289133518
 
 **Link de un tag:**
-- TBD
+- link del tag generado en el main: https://github.com/quinont/python-fastapi-test-action/releases/tag/v0.10.0
 
 ---
 
