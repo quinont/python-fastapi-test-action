@@ -4,8 +4,8 @@
 
 ```mermaid
 graph TD
-    subgraph Internet
-        Internet[Internet]
+    subgraph Red Pública
+        WWW[Internet]
     end
 
     subgraph GitHub
@@ -26,7 +26,7 @@ graph TD
     CR -->|4. Consume imagen de| AR
     CR -.->|5. Obtiene credenciales de| SM
     CR <-->|6. Lee y Escribe datos en| SQL
-    CR -->|7. Expone servicio públicamente| Internet
+    CR -->|7. Expone servicio públicamente| WWW
 ```
 
 ## Resumen de la Solución
