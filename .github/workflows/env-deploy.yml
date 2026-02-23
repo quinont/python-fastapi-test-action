@@ -80,7 +80,7 @@ jobs:
 #          region: ${{ env.GAR_LOCATION }}
 #          image: "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY_NAME }}:${{ env.IMAGE_TAG }}"
 #          secrets: |-
-#              DOCKER_DATABASE_URL=${{ vars.secret_database_url }}:latest
+#              DOCKER_DATABASE_URL=${{ vars.SECRET_DATABASE_URL }}:latest
 #
 #      - name: 'smoke test del despliegue'
 #        run: |

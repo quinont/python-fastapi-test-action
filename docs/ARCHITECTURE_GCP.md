@@ -4,6 +4,10 @@
 
 ```mermaid
 graph TD
+    subgraph Internet
+        Internet[Internet]
+    end
+
     subgraph GitHub
         GA[GitHub Actions]
     end
@@ -19,8 +23,10 @@ graph TD
     GA -->|1. Autentica vía| WIF
     GA -->|2. Sube imagen a| AR
     GA -->|3. Despliega en| CR
-    CR -.->|4. Obtiene credenciales de| SM
-    CR <-->|5. Lee y Escribe datos en| SQL
+    CR -->|4. Consume imagen de| AR
+    CR -.->|5. Obtiene credenciales de| SM
+    CR <-->|6. Lee y Escribe datos en| SQL
+    CR -->|7. Expone servicio públicamente| Internet
 ```
 
 ## Resumen de la Solución
